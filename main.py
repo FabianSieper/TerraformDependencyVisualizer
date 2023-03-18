@@ -180,6 +180,18 @@ def visualize_tree(tree):
     add_node(tree, graph)
     return graph
 
+def print_dependency_tree(tree, indent=0):
+    """
+    Prints a dependency tree in a text-based format.
+    """
+    for key, value in tree.items():
+        print("  " * indent + key)
+        if isinstance(value, dict):
+            print_dependency_tree(value, indent + 1)
+        else:
+            for item in value:
+                print_dependency_tree(item, indent + 1)
+
 def analyze_file():
     """
     Analyzes a Terraform file and visualizes its dependency tree.
@@ -201,6 +213,9 @@ def analyze_file():
     tree = dict_to_tree(dependency_tree_str)
     graph = visualize_tree(tree)
     graph.render("dependency_tree", format="png")
+
+    # Print dependency tree to console
+    print_dependency_tree(dependency_tree_str)
 
 if __name__ == '__main__':
     # Create the GUI interface
