@@ -1,0 +1,11 @@
+digraph {
+	"terragrunt.hcl"
+	"terragrunt.hcl" -> "git@atc-github.azure.cloud.bmw/Service-and-Repairs/cars-aws-ckf-terraform-modules.git // service // service-1.1.0"
+	"git@atc-github.azure.cloud.bmw/Service-and-Repairs/cars-aws-ckf-terraform-modules.git // service // service-1.1.0"
+	"git@atc-github.azure.cloud.bmw/Service-and-Repairs/cars-aws-ckf-terraform-modules.git // service // service-1.1.0" -> "https///atc.bmwgroup.net/bitbucket/scm/cavorsarch/clever_bp_tf_modules.git // cavors_ecr // v1.5.1"
+	"https///atc.bmwgroup.net/bitbucket/scm/cavorsarch/clever_bp_tf_modules.git // cavors_ecr // v1.5.1"
+	"git@atc-github.azure.cloud.bmw/Service-and-Repairs/cars-aws-ckf-terraform-modules.git // service // service-1.1.0" -> "https///atc.bmwgroup.net/bitbucket/scm/ckf/ckf-aws-terraform-modules.git // metric_alarm // metric_alarm-1.0.0"
+	"https///atc.bmwgroup.net/bitbucket/scm/ckf/ckf-aws-terraform-modules.git // metric_alarm // metric_alarm-1.0.0"
+	"https///atc.bmwgroup.net/bitbucket/scm/ckf/ckf-aws-terraform-modules.git // metric_alarm // metric_alarm-1.0.0" -> "ERROR DOWNLOADING"
+	"ERROR DOWNLOADING"
+}

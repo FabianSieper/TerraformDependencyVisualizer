@@ -37,18 +37,21 @@ def get_dependencies(file_path):
             dependencies.append(source_info)
 
     return dependencies
-
+    
 def clone_git_repo(git_ssh_url, git_tag, temp_folder):
     """
     Clones a Git repository to a temporary folder.
-    Returns the path to the cloned repository.
+    Returns the path to the cloned repository or None if the cloning fails.
     """
     tmp_dir = tempfile.mkdtemp(dir=temp_folder)
 
     cmd = ['git', 'clone', '--quiet', '-b', git_tag, '--depth', '1', git_ssh_url, tmp_dir]
-    subprocess.run(cmd, check=True)
-
-    return tmp_dir
+    try:
+        subprocess.run(cmd, check=True)
+        return tmp_dir
+    except subprocess.CalledProcessError:
+        print(f"[ERROR] - Failed to clone repository: {git_ssh_url}")
+        return None
 
 def find_folder_path(directory, folder_name):
     """
@@ -76,6 +79,14 @@ def get_dependent_file_path(dependent_folder_path):
         print("[WARNING] - No main.tf or terragrunt.hcl file was found")
         return None
 
+def add_no_dependencies_node(file_name, graph):
+    """
+    Adds a 'no further dependencies' node to the graph.
+    """
+    graph.node("No further dependencies")
+    graph.edge(file_name, "No further dependencies")
+
+
 def display_dependency_tree(file_path):
     """
     Computes the dependency tree of a Terraform file.
@@ -93,13 +104,26 @@ def display_dependency_tree(file_path):
     for dependency in dependencies:
         url, path, tag = dependency
         dependent_repo_path = clone_git_repo(url, tag, temp_folder)
-        dependent_folder_path = find_folder_path(dependent_repo_path, path)
-        if dependent_folder_path:
-            dependent_file_path = get_dependent_file_path(dependent_folder_path)
-            if dependent_file_path:
-                sub_dependency_tree = display_dependency_tree(dependent_file_path)
-                if sub_dependency_tree:
-                    dependency_tree[dependency] = sub_dependency_tree
+        
+        if dependent_repo_path:
+            dependent_folder_path = find_folder_path(dependent_repo_path, path)
+
+            if dependent_folder_path:
+                dependent_file_path = get_dependent_file_path(dependent_folder_path)
+                if dependent_file_path:
+                    sub_dependency_tree = display_dependency_tree(dependent_file_path)
+                    if sub_dependency_tree:
+                        dependency_tree[dependency] = sub_dependency_tree
+                    else:
+                        dependency_tree[dependency] = {}
+                else:
+                    dependency_tree[dependency] =  {"ERROR DOWNLOADING": ""}
+        else:
+            dependency_tree[dependency] = {"ERROR DOWNLOADING": ""}
+
+    return dependency_tree
+
+
 
     return dependency_tree
 
@@ -141,24 +165,32 @@ def dict_to_tree(dictionary):
     Returns a dictionary with a 'name' key and a 'children' key.
     """
     def add_children(node, children_dict):
-        for key, value in children_dict.items():
-            child = {'name': key}
-            if isinstance(value, dict):
-                child['children'] = []
-                add_children(child, value)
-            else:
-                child['children'] = []
-                for sub_child in value:
-                    if sub_child:
-                        add_children(child, sub_child)
-                        if any(sub_child['children']):
-                            child['children'].append(sub_child['children'])
-            if child['name'] != "children":
-                node['children'].append(child)
+        if isinstance(children_dict, str):
+            node['children'].append({'name': children_dict})
+        else:
+            for key, value in children_dict.items():
+                child = {'name': key}
+                if isinstance(value, dict):
+                    child['children'] = []
+                    add_children(child, value)
+                else:
+                    child['children'] = []
+                    for sub_child in value:
+                        if sub_child:
+                            if isinstance(sub_child, str):
+                                child['children'].append({'name': sub_child})
+                            else:
+                                add_children(child, sub_child)
+                                if 'children' in sub_child and any(sub_child['children']):
+                                    child['children'].append(sub_child['children'])
+                if child['name'] != "children":
+                    node['children'].append(child)
 
     tree = {'name': list(dictionary.keys())[0], 'children': []}
     add_children(tree, list(dictionary.values())[0])
     return tree
+
+
 
 def visualize_tree(tree):
     """
@@ -182,15 +214,18 @@ def visualize_tree(tree):
 
 def print_dependency_tree(tree, indent=0):
     """
-    Prints a dependency tree in a text-based format.
+    Recursively prints the dependency tree in a human-readable format.
     """
-    for key, value in tree.items():
-        print("  " * indent + key)
-        if isinstance(value, dict):
-            print_dependency_tree(value, indent + 1)
-        else:
-            for item in value:
-                print_dependency_tree(item, indent + 1)
+    if isinstance(tree, str):
+        print('  ' * indent + tree)
+    else:
+        for key, value in tree.items():
+            print('  ' * indent + str(key))
+            if isinstance(value, dict):
+                print_dependency_tree(value, indent + 1)
+            elif isinstance(value, list):
+                for item in value:
+                    print_dependency_tree(item, indent + 1)
 
 def analyze_file():
     """
@@ -198,24 +233,25 @@ def analyze_file():
     """
     file_path = file_path_var.get()
     if not os.path.isfile(file_path):
-        tk.messagebox.showerror("Error", "Invalid file path")
+        tk.messagebox.showerror("Error", "Invalid file path: '" + file_path + "'")
         return
 
     dependency_tree = display_dependency_tree(file_path)
-    if not dependency_tree:
-        tk.messagebox.showinfo("Info", "No dependencies found")
-        return
+    
+    file_name = os.path.basename(file_path)
 
     dependency_tree_str = transform_dict_keys(dependency_tree)
-    file_name = os.path.basename(file_path)
     dependency_tree_str = {file_name: dependency_tree_str}
-
     tree = dict_to_tree(dependency_tree_str)
     graph = visualize_tree(tree)
+
     graph.render("dependency_tree", format="png")
 
     # Print dependency tree to console
-    print_dependency_tree(dependency_tree_str)
+    if dependency_tree:
+        print_dependency_tree({file_name: dependency_tree})
+    else:
+        print(f"{file_name}\n  No further dependencies")
 
 if __name__ == '__main__':
     # Create the GUI interface
