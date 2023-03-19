@@ -57,6 +57,43 @@ sudo dnf install graphviz
 
 After installing Graphviz on your system, the Python graphviz package should work as expected.
 
+
+### File and Git Repository Format
+For the Terraform Dependency Analyzer to work correctly, your files and Git repositories should adhere to the following formats:
+
+#### Terraform Files
+
+1. The tool expects Terraform files to be named `main.tf` or `terragrunt.hcl`.
+2. The dependencies should be defined using the source attribute in the Terraform module block or the terraform.source attribute in the Terragrunt configuration block.
+3. The source attribute should be formatted as follows: `git::<git_ssh_url>//<path>?ref=<tag>`. The tool currently supports only SSH URLs for Git repositories.
+
+#### Git Repository Structure
+1. The Git repositories should contain Terraform modules or resources, and the folder structure should be consistent with the paths provided in the source attribute.
+2. The repository should have Git tags corresponding to the tags specified in the source attribute. The tool will use these tags to clone the appropriate version of the repository.
+
+#### Example 
+Here's an example of a valid Terraform file and Git repository structure:
+- Terraform file main.tf:
+
+    ```bash
+    module "example" {
+        source = "git::git@github.com:organization/terraform-modules//module-a?ref=v1.0.0"
+    }
+    ```
+
+- Git Repository:
+    ```bash
+    github.com/organization/terraform-modules/
+    ├── module-a/
+    │   ├── main.tf
+    │   └── variables.tf
+    └── module-b/
+        ├── main.tf
+        └── variables.tf
+    ```
+
+In this example, the `main.tf` file depends on `module-a`, which is located in the `terraform-modules` repository. The repository has two modules, `module-a` and `module-b`, and the dependency is specified using the `source` attribute with an SSH URL, path, and Git tag.
+
 ## How to Use
 
 1. Run the script using Python:
@@ -72,3 +109,9 @@ After installing Graphviz on your system, the Python graphviz package should wor
 4. If the tool encounters any issues or cannot find any dependencies, an error or informational message will be displayed. Make sure to provide a valid Terraform file and ensure that your Git repositories are accessible.
 
 5. To analyze another file, repeat steps 2-4.
+
+### Generated Images
+
+When the Terraform Dependency Analyzer successfully generates a dependency tree, it will create an image of the tree using Graphviz. This image will be stored in the same directory as the script with the filename `dependency_tree.png`.
+
+You can open the image using any image viewer or editor that supports PNG files to view the visual representation of your Terraform project's dependency tree.
