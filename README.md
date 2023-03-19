@@ -1,11 +1,10 @@
 # Terraform Dependency Analyzer
 
 ## General Description
-The Terraform Dependency Analyzer is a simple GUI-based Python tool designed to analyze and visualize the dependency tree of Terraform files. It allows users to easily understand the dependencies between modules and resources within a Terraform project. By visualizing the dependency tree, developers can quickly identify the relationships between resources and modules and make more informed decisions during development and maintenance.
+The Terraform Dependency Analyzer is a GUI-based Python tool designed to analyze and visualize the dependency tree of Terraform files. It allows users to easily understand the dependencies between modules and resources within a Terraform project. By visualizing the dependency tree, developers can quickly identify the relationships between resources and modules and make more informed decisions during development and maintenance.
 
 ## Requirements
 To use the Terraform Dependency Analyzer, you need to have the following installed:
-
 - Python 3.7 or higher
 - The graphviz Python package (for generating dependency tree visualizations)
 - The tkinter package (for the GUI interface)
@@ -115,3 +114,13 @@ In this example, the `main.tf` file depends on `module-a`, which is located in t
 When the Terraform Dependency Analyzer successfully generates a dependency tree, it will create an image of the tree using Graphviz. This image will be stored in the same directory as the script with the filename `dependency_tree.png`.
 
 You can open the image using any image viewer or editor that supports PNG files to view the visual representation of your Terraform project's dependency tree.
+
+#### Example terraform-dependency images
+
+This image represents a whole dependency tree of a file `terragrunt.hcl`.
+
+![Dependency tree without errors](/example_images/dependency_tree.png)
+
+In this case, a dependency could not be downloaded. This is indicated with an error from the resource, which could not be loaded.
+
+![Dependency tree without errors](/example_images/error_downloading.png)

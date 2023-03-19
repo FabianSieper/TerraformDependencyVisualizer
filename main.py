@@ -222,10 +222,17 @@ def print_dependency_tree(tree, indent=0):
         for key, value in tree.items():
             print('  ' * indent + str(key))
             if isinstance(value, dict):
-                print_dependency_tree(value, indent + 1)
+                if not value:
+                    print('  ' * (indent + 1) + "No further dependencies")
+                else:
+                    print_dependency_tree(value, indent + 1)
             elif isinstance(value, list):
-                for item in value:
-                    print_dependency_tree(item, indent + 1)
+                if not value:
+                    print('  ' * (indent + 1) + "No further dependencies")
+                else:
+                    for item in value:
+                        print_dependency_tree(item, indent + 1)
+
 
 def analyze_file():
     """
