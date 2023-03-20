@@ -3,6 +3,7 @@ import os
 import subprocess
 import tkinter as tk
 from tkinter import filedialog
+from tkinter.scrolledtext import ScrolledText
 import tempfile
 import graphviz
 import sys
@@ -261,21 +262,32 @@ def analyze_file():
     else:
         print(f"{dir_name}\n  No further dependencies")
 
-class TextRedirector(tk.Text):
+class TextRedirector(ScrolledText):
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
+
     def write(self, text):
         self.insert(tk.END, text)
         self.see(tk.END)
 
+    def flush(self):
+        pass
+
 if __name__ == '__main__':
     # Create the GUI interface
     root = tk.Tk()
+    root.geometry("1000x700")  # Set the default window width and height
     root.title("Dependency Analyzer")
 
+    # Create a frame for the file path selection widgets
+    file_path_frame = tk.Frame(root)
+    file_path_frame.pack(side=tk.TOP, padx=10, pady=10, fill=tk.X)
+
     # Create the file path selection widgets
-    file_path_label = tk.Label(root, text="File path:")
+    file_path_label = tk.Label(file_path_frame, text="File path:")
     file_path_var = tk.StringVar()
-    file_path_entry = tk.Entry(root, textvariable=file_path_var, width=50)
-    file_path_browse_button = tk.Button(root, text="Browse...", command=browse_file_path)
+    file_path_entry = tk.Entry(file_path_frame, textvariable=file_path_var, width=50)
+    file_path_browse_button = tk.Button(file_path_frame, text="Browse...", command=browse_file_path)
 
     # Create the log output widget
     log_output = TextRedirector(root, wrap=tk.WORD)
@@ -283,11 +295,6 @@ if __name__ == '__main__':
 
     # Redirect standard output to the log_output widget
     sys.stdout = log_output
-
-    # Add a scrollbar for the log output widget
-    scrollbar = tk.Scrollbar(log_output, command=log_output.yview)
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    log_output.config(yscrollcommand=scrollbar.set)
 
     # Create the analyze button
     analyze_button = tk.Button(root, text="Analyze", command=analyze_file)
