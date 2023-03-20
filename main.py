@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import filedialog
 import tempfile
 import graphviz
+import sys
 
 # Constant to name the temporary folder
 TMP_FOLDER_NAME = "temp"
@@ -245,10 +246,10 @@ def analyze_file():
 
     dependency_tree = display_dependency_tree(file_path)
     
-    file_name = os.path.basename(file_path)
+    dir_name = os.path.dirname(file_path).replace(":", "")
 
     dependency_tree_str = transform_dict_keys(dependency_tree)
-    dependency_tree_str = {file_name: dependency_tree_str}
+    dependency_tree_str = {dir_name: dependency_tree_str}
     tree = dict_to_tree(dependency_tree_str)
     graph = visualize_tree(tree)
 
@@ -256,9 +257,14 @@ def analyze_file():
 
     # Print dependency tree to console
     if dependency_tree:
-        print_dependency_tree({file_name: dependency_tree})
+        print_dependency_tree({dir_name: dependency_tree})
     else:
-        print(f"{file_name}\n  No further dependencies")
+        print(f"{dir_name}\n  No further dependencies")
+
+class TextRedirector(tk.Text):
+    def write(self, text):
+        self.insert(tk.END, text)
+        self.see(tk.END)
 
 if __name__ == '__main__':
     # Create the GUI interface
@@ -270,6 +276,18 @@ if __name__ == '__main__':
     file_path_var = tk.StringVar()
     file_path_entry = tk.Entry(root, textvariable=file_path_var, width=50)
     file_path_browse_button = tk.Button(root, text="Browse...", command=browse_file_path)
+
+    # Create the log output widget
+    log_output = TextRedirector(root, wrap=tk.WORD)
+    log_output.pack(side=tk.TOP, padx=10, pady=10, fill=tk.BOTH, expand=True)
+
+    # Redirect standard output to the log_output widget
+    sys.stdout = log_output
+
+    # Add a scrollbar for the log output widget
+    scrollbar = tk.Scrollbar(log_output, command=log_output.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    log_output.config(yscrollcommand=scrollbar.set)
 
     # Create the analyze button
     analyze_button = tk.Button(root, text="Analyze", command=analyze_file)
