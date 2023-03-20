@@ -137,6 +137,8 @@ def browse_file_path():
     file_path = filedialog.askopenfilename()
     if file_path:
         file_path_var.set(file_path)
+        clear_log_output()
+        analyze_file()
 
 def transform_dict_keys(data):
     """
@@ -240,11 +242,16 @@ def analyze_file():
     """
     Analyzes a Terraform file and visualizes its dependency tree.
     """
+    clear_log_output()
+
+    print("COMPUTING ...")
+    print()
+
     file_path = file_path_var.get()
     if not os.path.isfile(file_path):
         tk.messagebox.showerror("Error", "Invalid file path: '" + file_path + "'")
         return
-
+    
     dependency_tree = display_dependency_tree(file_path)
     
     dir_name = os.path.dirname(file_path).replace(":", "")
@@ -257,10 +264,14 @@ def analyze_file():
     graph.render("dependency_tree", format="png")
 
     # Print dependency tree to console
+    print()
     if dependency_tree:
         print_dependency_tree({dir_name: dependency_tree})
     else:
-        print(f"{dir_name}\n  No further dependencies")
+        print(f"{dir_name}\n  No dependencies found")
+
+    print()
+    print("FINISHED")
 
 class TextRedirector(ScrolledText):
     def __init__(self, master=None, **kwargs):
@@ -272,6 +283,12 @@ class TextRedirector(ScrolledText):
 
     def flush(self):
         pass
+
+def clear_log_output():
+    """
+    Clears the log output.
+    """
+    log_output.delete(1.0, tk.END)
 
 if __name__ == '__main__':
     # Create the GUI interface
