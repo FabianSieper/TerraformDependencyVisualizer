@@ -1,2 +1,3 @@
 graphviz==0.17
+tkinter==8.6
 tqdm

@@ -101,19 +101,45 @@ In this example, the `main.tf` file depends on `module-a`, which is located in t
     python main.py
     ```
 
-2. The GUI interface will open. Click on the "Browse..." button to select the Terraform file (main.tf or terragrunt.hcl) you want to analyze.
+2. The GUI interface will open. Click on the "Analyze Folder" or "Analzye File" button to select a Terraform file or a folder containing Terraform files (main.tf or terragrunt.hcl) you want to analyze.
 
-3. After selecting the file, click the "Analyze" button. The tool will analyze the selected file and generate a visualization of the dependency tree as a PNG file named dependency_tree.png in the same directory as the script.
+3. The tool will analyze the selected file(s) and generate a visualization of the dependency tree as logs inside of the UI
 
-4. If the tool encounters any issues or cannot find any dependencies, an error or informational message will be displayed. Make sure to provide a valid Terraform file and ensure that your Git repositories are accessible.
+4. Also graphs will be computed and saved in the same directory as the `main.py` file. 
 
-5. To analyze another file, repeat steps 2-4.
+4. If the tool encounters any issues while fetching dependencies, an error message `ERROR DOWNLOADING` will be printed into the logs. Simply search for one of the key words. If none are found, all dependencies could be found.
 
+### Generated Logs
+Example logs:
+
+```
+Analyzing file: <path-to-file>smart-maintenance\terragrunt.hcl
+
+<folder-path>\smart-maintenance
+  ('git@github.Project/tf-modules.git', 'service', 'service-1.1.1')
+    ('git@atc-github.azure.cloud.bmw:Service-and-Repairs/arch-tf-modules.git', 'cavors_ecr', 'v1.5.1')
+      No further dependencies
+    ('git@github.Project/tf-modules.git', 'metric_alarm', 'metric_alarm-1.0.0')
+      No further dependencies
+
+================================================================================
+Analyzing file: <path-to-file>vehicle-information\terragrunt.hcl
+[ERROR] - Failed to clone repository: <path-to-repo-1>/ckf-aws-terraform-modules.git
+
+<folder-path>\vehicle-information
+  ('git@github.Project/tf-modules.git', 'service_with_serverless_db', 'service_with_serverless_db-3.0.0')
+    ('<path-to-repo-1>/ckf-aws-terraform-modules.git', 'service', 'service-2.0.1')
+      ERROR DOWNLOADING
+    ('<path-to-repo-2>/clever_bp_tf_modules.git', 'aurora_serverless', 'aurora_serverless-2.1.0')
+      No further dependencies
+
+================================================================================
+	FINISHED
+```
 ### Generated Images
 
-When the Terraform Dependency Analyzer successfully generates a dependency tree, it will create an image of the tree using Graphviz. This image will be stored in the same directory as the script with the filename `dependency_tree.png`.
-
-You can open the image using any image viewer or editor that supports PNG files to view the visual representation of your Terraform project's dependency tree.
+When the Terraform Dependency Analyzer successfully generates a dependency tree, it will create an image of the tree using Graphviz. This image will be stored in the same directory as the script with the filename `dependency_tree_terragrunt.png`. 
+However, this feature is mainly ment to be used for analyzing single files.
 
 #### Example terraform-dependency images
 
