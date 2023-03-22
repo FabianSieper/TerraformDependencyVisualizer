@@ -7,6 +7,8 @@ from tkinter.scrolledtext import ScrolledText
 import tempfile
 import graphviz
 import sys
+import glob
+import tqdm
 
 # Constant to name the temporary folder
 TMP_FOLDER_NAME = "temp"
@@ -49,7 +51,7 @@ def clone_git_repo(git_ssh_url, git_tag, temp_folder):
 
     cmd = ['git', 'clone', '--quiet', '-b', git_tag, '--depth', '1', git_ssh_url, tmp_dir]
     try:
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
         return tmp_dir
     except subprocess.CalledProcessError:
         print(f"[ERROR] - Failed to clone repository: {git_ssh_url}")
@@ -126,19 +128,66 @@ def display_dependency_tree(file_path):
     return dependency_tree
 
 
-
-    return dependency_tree
-
 def browse_file_path():
     """
-    Opens a file dialog and allows the user to select a Terraform file.
-    Updates a StringVar variable with the file path.
+    Opens a file dialog and allows the user to select a Terraform file or a folder.
+    Updates a StringVar variable with the file path or folder path.
     """
     file_path = filedialog.askopenfilename()
     if file_path:
         file_path_var.set(file_path)
         clear_log_output()
         analyze_file()
+
+
+def analyze_directory():
+    """
+    Analyzes a directory and visualizes the dependency tree for each Terraform file in its subdirectories.
+    """
+    clear_log_output()
+
+    directory_path = filedialog.askdirectory()
+    if not directory_path:
+        return
+
+    tf_files = glob.glob(os.path.join(directory_path, '**', 'main.tf'), recursive=True)
+    hcl_files = glob.glob(os.path.join(directory_path, '**', 'terragrunt.hcl'), recursive=True)
+    all_files = tf_files + hcl_files
+
+    if not all_files:
+        print("No .tf or .hcl files found in the selected directory.")
+        return
+
+    for file_path in tqdm.tqdm(all_files, "Analyzing files ..."):
+        print(f"Analyzing file: {file_path}")
+        dependency_tree = display_dependency_tree(file_path)
+
+        if dependency_tree is None:
+            print(f"No dependencies found for file: {file_path}")
+            continue
+
+        dir_name = os.path.dirname(file_path).replace(":", "")
+
+        dependency_tree_str = transform_dict_keys(dependency_tree)
+        dependency_tree_str = {dir_name: dependency_tree_str}
+        tree = dict_to_tree(dependency_tree_str)
+        graph = visualize_tree(tree)
+
+        graph_name = f"dependency_tree_{os.path.splitext(os.path.basename(file_path))[0]}"
+        graph.render(graph_name, format="png")
+
+        # Print dependency tree to console
+        print()
+        if dependency_tree:
+            print_dependency_tree({dir_name: dependency_tree})
+        else:
+            print(f"{dir_name}\n  No dependencies found")
+
+        print()
+        print("=" * 80)
+
+    print("FINISHED")
+
 
 def transform_dict_keys(data):
     """
@@ -304,7 +353,6 @@ if __name__ == '__main__':
     file_path_label = tk.Label(file_path_frame, text="File path:")
     file_path_var = tk.StringVar()
     file_path_entry = tk.Entry(file_path_frame, textvariable=file_path_var, width=50)
-    file_path_browse_button = tk.Button(file_path_frame, text="Browse...", command=browse_file_path)
 
     # Create the log output widget
     log_output = TextRedirector(root, wrap=tk.WORD)
@@ -313,14 +361,14 @@ if __name__ == '__main__':
     # Redirect standard output to the log_output widget
     sys.stdout = log_output
 
-    # Create the analyze button
-    analyze_button = tk.Button(root, text="Analyze", command=analyze_file)
+    # Button to analyze a single file or a folder
+    analyze_file_button = tk.Button(root, text="Analyze File", command=browse_file_path)
+    analyze_folder_button = tk.Button(root, text="Analyze Folder", command=analyze_directory)
 
     # Pack the widgets
     file_path_label.pack(side=tk.LEFT, padx=(10, 0), pady=10)
     file_path_entry.pack(side=tk.LEFT, padx=(0, 10), pady=10, fill=tk.X, expand=True)
-    file_path_browse_button.pack(side=tk.LEFT, pady=10)
-    analyze_button.pack(side=tk.BOTTOM, padx=10, pady=10)
-
+    analyze_file_button.pack(side=tk.BOTTOM, padx=10, pady=(0, 10))
+    analyze_folder_button.pack(side=tk.BOTTOM, padx=10, pady=(0, 10))
     # Run the GUI
     root.mainloop()

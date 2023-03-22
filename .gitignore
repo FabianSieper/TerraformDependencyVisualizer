@@ -4,3 +4,4 @@ temp/
 .idea
 .dependency_tree.png
 dependency_tree
+dependency_tree_terragrunt*
