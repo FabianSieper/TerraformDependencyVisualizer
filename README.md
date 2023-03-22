@@ -105,6 +105,8 @@ In this example, the `main.tf` file depends on `module-a`, which is located in t
 
 3. The tool will analyze the selected file(s) and generate a visualization of the dependency tree as logs inside of the UI
 
+4. When selecting a folder, the progress of files will be displayed in the cmd, from wich `main.py` was executed.
+
 4. Also graphs will be computed and saved in the same directory as the `main.py` file. 
 
 4. If the tool encounters any issues while fetching dependencies, an error message `ERROR DOWNLOADING` will be printed into the logs. Simply search for one of the key words. If none are found, all dependencies could be found.
