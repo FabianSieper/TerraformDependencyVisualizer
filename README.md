@@ -140,8 +140,7 @@ Analyzing file: <path-to-file>vehicle-information\terragrunt.hcl
 ```
 ### Generated Images
 
-When the Terraform Dependency Analyzer successfully generates a dependency tree, it will create an image of the tree using Graphviz. This image will be stored in the same directory as the script with the filename `dependency_tree_terragrunt.png`. 
-However, this feature is mainly ment to be used for analyzing single files.
+When the Terraform Dependency Analyzer successfully generates a dependency tree, it will create an image of the tree using Graphviz. This image will be stored in the same directory as the script with the filename `dependency_tree.png`. 
 
 #### Example terraform-dependency images
 

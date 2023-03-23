@@ -158,6 +158,9 @@ def analyze_directory():
         print("No .tf or .hcl files found in the selected directory.")
         return
 
+    # Create a single graph for all the files
+    main_graph = graphviz.Digraph()
+
     for file_path in tqdm.tqdm(all_files, "Analyzing files ..."):
         print(f"Analyzing file: {file_path}")
         dependency_tree = display_dependency_tree(file_path)
@@ -171,10 +174,9 @@ def analyze_directory():
         dependency_tree_str = transform_dict_keys(dependency_tree)
         dependency_tree_str = {dir_name: dependency_tree_str}
         tree = dict_to_tree(dependency_tree_str)
-        graph = visualize_tree(tree)
 
-        graph_name = f"dependency_tree_{os.path.splitext(os.path.basename(file_path))[0]}"
-        graph.render(graph_name, format="png")
+        # Add the nodes and edges for the current file to the main graph
+        visualize_tree(tree, main_graph)
 
         # Print dependency tree to console
         print()
@@ -185,6 +187,9 @@ def analyze_directory():
 
         print()
         print("=" * 80)
+
+    # Render the main graph containing all the dependency trees
+    main_graph.render("dependency_tree", format="png")
 
     print("FINISHED")
 
@@ -245,7 +250,7 @@ def dict_to_tree(dictionary):
 
 
 
-def visualize_tree(tree):
+def visualize_tree(tree, graph=None):
     """
     Generates a visualization of a tree structure.
     Returns a graphviz object.
@@ -261,9 +266,12 @@ def visualize_tree(tree):
                         graph.edge(name, child_name)
                         add_node(child, graph)
 
-    graph = graphviz.Digraph()
+    if graph is None:
+        graph = graphviz.Digraph()
+
     add_node(tree, graph)
     return graph
+
 
 def print_dependency_tree(tree, indent=0):
     """
